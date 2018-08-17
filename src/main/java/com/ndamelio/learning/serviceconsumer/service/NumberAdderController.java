@@ -1,8 +1,8 @@
 package com.ndamelio.learning.serviceconsumer.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -11,7 +11,7 @@ import java.util.List;
 @RestController
 public class NumberAdderController {
 
-    private static final Logger LOG = LoggerFactory.getLogger(NumberAdderController.class);
+    private Log log = LogFactory.getLog(NumberAdderController.class);
 
     private RandomServiceProxy randomServiceProxy;
 
@@ -19,6 +19,7 @@ public class NumberAdderController {
         this.randomServiceProxy = randomServiceProxy;
     }
 
+    @HystrixCommand(fallbackMethod = "getDefaultResponse")
     @RequestMapping("/add")
     public Long add() {
         long sum = 0;
@@ -32,8 +33,12 @@ public class NumberAdderController {
         for (int number: numbers) {
             sum += number;
         }
-        LOG.warn("Returning {}", sum);
+        log.warn("Returning "+ sum);
         return sum;
+    }
+
+    public Long getDefaultResponse() {
+        return 10000L;
     }
 
 }
